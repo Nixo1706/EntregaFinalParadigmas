@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="536.0" prefWidth="944.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="co.edu.poli.proyecto.controlador.MenuController">
+   <children>
+      <Pane prefHeight="200.0" prefWidth="200.0">
+         <children>
+            <Pane layoutX="680.0" layoutY="14.0" prefHeight="508.0" prefWidth="253.0" style="-fx-background-color: #ffff;">
+               <children>
+                  <TextField fx:id="txf_idreserva" layoutX="87.0" layoutY="33.0" prefHeight="25.0" prefWidth="157.0" />
+                  <Label layoutX="16.0" layoutY="37.0" text="Id reserva">
+                     <font>
+                        <Font name="Candara" size="12.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="15.0" layoutY="120.0" text="Fecha">
+                     <font>
+                        <Font name="Candara" size="12.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="16.0" layoutY="78.0" text="Laboratorio">
+                     <font>
+                        <Font name="Candara" size="12.0" />
+                     </font>
+                  </Label>
+                  <Label layoutX="17.0" layoutY="161.0" text="Hora">
+                     <font>
+                        <Font name="Candara" size="12.0" />
+                     </font>
+                  </Label>
+                  <ComboBox fx:id="cmb_laboratorio" layoutX="87.0" layoutY="74.0" prefHeight="25.0" prefWidth="157.0" />
+                  <DatePicker fx:id="dtp_fecha" layoutX="84.0" layoutY="116.0" prefHeight="25.0" prefWidth="157.0" />
+                  <Button fx:id="btn_nueva_reserva" layoutX="67.0" layoutY="215.0" mnemonicParsing="false" onAction="#btn_nueva_reserva_a" prefHeight="49.0" prefWidth="131.0" style="-fx-background-color: #699acb;" text="Nueva Reserva" textFill="WHITE">
+                     <font>
+                        <Font name="Candara Bold" size="15.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+                  <Button fx:id="btn_limpiar" layoutX="67.0" layoutY="433.0" mnemonicParsing="false" onAction="#btn_limpiar_a" prefHeight="49.0" prefWidth="131.0" style="-fx-background-color: #699acb;" text="Limpiar" textFill="WHITE">
+                     <font>
+                        <Font name="Candara Bold" size="15.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+                  <Button fx:id="btn_eliminar_reserva" layoutX="67.0" layoutY="360.0" mnemonicParsing="false" onAction="#btn_eliminar_reserva_a" prefHeight="49.0" prefWidth="131.0" style="-fx-background-color: #699acb;" text="Eliminar Reserva" textFill="WHITE">
+                     <font>
+                        <Font name="Candara Bold" size="15.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+                  <Button fx:id="btn_cambiar_reserva" layoutX="67.0" layoutY="288.0" mnemonicParsing="false" onAction="#btn_cambiar_reserva_a" prefHeight="49.0" prefWidth="131.0" style="-fx-background-color: #699acb;" text="Cambiar Reserva" textFill="WHITE">
+                     <font>
+                        <Font name="Candara Bold" size="15.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+                  <TextField fx:id="txf_hora" layoutX="84.0" layoutY="157.0" prefHeight="25.0" prefWidth="42.0" />
+                  <Label layoutX="143.0" layoutY="161.0" text="Minuto" />
+                  <TextField fx:id="txf_minuto" layoutX="198.0" layoutY="157.0" prefHeight="25.0" prefWidth="42.0" />
+               </children>
+            </Pane>
+            <Pane fx:id="pnl_historial" layoutX="204.0" layoutY="14.0" prefHeight="508.0" prefWidth="464.0" style="-fx-background-color: #ffff;">
+               <children>
+                  <TableView fx:id="tabla_obj" layoutX="8.0" layoutY="107.0" prefHeight="387.0" prefWidth="446.0">
+                    <columns>
+                      <TableColumn fx:id="col_id_reser_h" prefWidth="75.0" text="ID Reserva" />
+                      <TableColumn fx:id="col_lab_h" prefWidth="75.0" text="Laboratorio" />
+                        <TableColumn fx:id="col_fecha_h" prefWidth="75.0" text="Fecha" />
+                        <TableColumn fx:id="col_horaini_h" prefWidth="75.0" text="Hora Inicio" />
+                        <TableColumn fx:id="col_horafin_h" prefWidth="75.0" text="Hora Fin" />
+                        <TableColumn fx:id="col_estado_h" prefWidth="75.0" text="Estado" />
+                    </columns>
+                  </TableView>
+                  <TextField fx:id="txf_buscar" layoutX="33.0" layoutY="52.0" prefHeight="30.0" prefWidth="246.0" />
+                  <Label layoutX="11.0" layoutY="14.0" text="Historial de reservas">
+                     <font>
+                        <Font name="Candara" size="25.0" />
+                     </font>
+                  </Label>
+                  <ImageView fitHeight="22.0" fitWidth="39.0" layoutX="11.0" layoutY="56.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../recursos/lupa.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </Pane>
+            <Pane prefHeight="542.0" prefWidth="213.0">
+               <children>
+                  <ImageView fitHeight="536.0" fitWidth="225.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../recursos/panelizq01.jpg" />
+                     </image>
+                  </ImageView>
+               </children>
+            </Pane>
+            <Pane prefHeight="542.0" prefWidth="192.0">
+               <children>
+                  <Button fx:id="btn_historial" layoutX="33.0" layoutY="299.0" mnemonicParsing="false" onAction="#btn_historial_a" prefHeight="49.0" prefWidth="157.0" style="-fx-background-color: #699acb;" text="Historial" textFill="WHITE">
+                     <font>
+                        <Font name="Candara Bold" size="15.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+                  <ImageView fitHeight="36.0" fitWidth="36.0" layoutX="5.0" layoutY="306.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../recursos/historia.png" />
+                     </image>
+                  </ImageView>
+                  <Label layoutX="18.0" layoutY="175.0" text="Bienvenido" textFill="WHITE">
+                     <font>
+                        <Font name="Candara" size="33.0" />
+                     </font>
+                  </Label>
+                  <Label fx:id="lb_usuario" layoutX="60.0" layoutY="214.0" text="Usuario" textFill="WHITE">
+                     <font>
+                        <Font name="Candara" size="22.0" />
+                     </font>
+                  </Label>
+                  <Button fx:id="btn_salir" layoutX="17.0" layoutY="469.0" mnemonicParsing="false" onAction="#btn_salir_a" prefHeight="49.0" prefWidth="114.0" style="-fx-background-color: #699acb;" text="Salir" textFill="WHITE">
+                     <font>
+                        <Font name="Candara Bold" size="15.0" />
+                     </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+                  <ImageView fitHeight="36.0" fitWidth="37.0" layoutX="6.0" layoutY="476.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../../../../../../recursos/cerrar.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </Pane>
+         </children>
+      </Pane>
+   </children>
+</StackPane>
