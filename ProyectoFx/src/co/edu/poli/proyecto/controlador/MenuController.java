@@ -40,365 +40,409 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+/**
+ * Controlador para el menú de reservas.
+ * Administra la interfaz de usuario y la lógica para crear, modificar y eliminar reservas.
+ * Implementa {@link Initializable} para inicializar los componentes de la interfaz.
+ * 
+ */
 public class MenuController implements Initializable {
 
-	private ObservableList<Reserva> reservas;
-	OperacionArchivo operacionArchivo = new ImpleOperacionArchivo();
+    private ObservableList<Reserva> reservas;
+    private OperacionArchivo operacionArchivo = new ImpleOperacionArchivo();
+    private ArrayList<String> errores;
+    private double xOffset = 0;
+    private double yOffset = 0;
 
-	private ArrayList<String> errores;
+    @FXML
+    private TextField txf_idreserva;
+    @FXML
+    private ComboBox<String> cmb_laboratorio;
+    @FXML
+    private TextField txf_hora;
+    @FXML
+    private TextField txf_minuto;
+    @FXML
+    private DatePicker dtp_fecha;
+    @FXML
+    private Button btn_nueva_reserva;
+    @FXML
+    private Button btn_limpiar;
+    @FXML
+    private Button btn_eliminar_reserva;
+    @FXML
+    private Button btn_cambiar_reserva;
+    @FXML
+    private Pane pnl_historial;
+    @FXML
+    private TableView<Reserva> tabla_obj;
+    @FXML
+    private TableColumn<Reserva, Integer> col_id_reser_h;
+    @FXML
+    private TableColumn<Reserva, String> col_lab_h;
+    @FXML
+    private TableColumn<Reserva, String> col_fecha_h;
+    @FXML
+    private TableColumn<Reserva, LocalTime> col_horaini_h;
+    @FXML
+    private TableColumn<Reserva, LocalTime> col_horafin_h;
+    @FXML
+    private TableColumn<Reserva, String> col_estado_h;
+    @FXML
+    private TextField txf_buscar;
+    @FXML
+    private Button btn_historial;
+    @FXML
+    private Button btn_reservas_disp;
+    @FXML
+    private Label lb_usuario;
+    @FXML
+    private Button btn_salir;
 
-	private double xOffset = 0;
-	private double yOffset = 0;
+    private ObservableList<Reserva> reservasList;
+    private ObservableList<Reserva> reservasDisList;
 
-	@FXML
-	private TextField txf_idreserva;
-	@FXML
-	private ComboBox<String> cmb_laboratorio;
-	@FXML
-	private TextField txf_hora;
-	@FXML
-	private TextField txf_minuto;
-	@FXML
-	private DatePicker dtp_fecha;
-	@FXML
-	private Button btn_nueva_reserva;
-	@FXML
-	private Button btn_limpiar;
-	@FXML
-	private Button btn_eliminar_reserva;
-	@FXML
-	private Button btn_cambiar_reserva;
-	@FXML
-	private Pane pnl_historial;
-	@FXML
-	private TableView<Reserva> tabla_obj;
-	@FXML
-	private TableColumn<Reserva, Integer> col_id_reser_h;
-	@FXML
-	private TableColumn<Reserva, String> col_lab_h;
-	@FXML
-	private TableColumn<Reserva, String> col_fecha_h;
-	@FXML
-	private TableColumn<Reserva, LocalTime> col_horaini_h;
-	@FXML
-	private TableColumn<Reserva, LocalTime> col_horafin_h;
-	@FXML
-	private TableColumn<Reserva, String> col_estado_h;
-	@FXML
-	private TextField txf_buscar;
-	@FXML
-	private Button btn_historial;
-	@FXML
-	private Button btn_reservas_disp;
-	@FXML
-	private Label lb_usuario;
-	@FXML
-	private Button btn_salir;
+    /**
+     * Inicializa el controlador de la vista.
+     * Configura los componentes y carga las reservas desde un archivo.
+     * 
+     * @param arg0 el URL de la vista.
+     * @param arg1 el conjunto de recursos utilizado para localizar la vista.
+     */
+    @Override
+    public void initialize(URL arg0, ResourceBundle arg1) {
+        errores = new ArrayList<String>();
+        reservas = FXCollections.observableArrayList();
 
-	private ObservableList<Reserva> reservasList;
-	private ObservableList<Reserva> reservasDisList;
+        // Configurar las columnas de tabla_obj
+        col_id_reser_h.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
+        col_lab_h.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLaboratorio().getSalon()));
+        col_fecha_h.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getHorarioReserva().getFecha()));
+        col_horaini_h.setCellValueFactory(data -> new SimpleObjectProperty<>(data.getValue().getHorarioReserva().getHoraInicio()));
+        col_horafin_h.setCellValueFactory(data -> {
+            TiempoReserva tiempoReserva = data.getValue().getHorarioReserva();
+            return new SimpleObjectProperty<>(tiempoReserva.calcularHoraFin(tiempoReserva.getHoraInicio()));
+        });
+        col_estado_h.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEstado()));
 
-	@Override
-	public void initialize(URL arg0, ResourceBundle arg1) {
-		errores = new ArrayList<String>();
+        reservasList = FXCollections.observableArrayList();
+        tabla_obj.setItems(reservasList);
 
-		reservas = FXCollections.observableArrayList();
+        btn_nueva_reserva.setDisable(false);
+        btn_cambiar_reserva.setDisable(true);
+        btn_eliminar_reserva.setDisable(true);
 
-		// Configurar las columnas de tabla_obj
-		col_id_reser_h.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getId()).asObject());
-		col_lab_h.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getLaboratorio().getSalon()));
-		col_fecha_h
-				.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getHorarioReserva().getFecha()));
-		col_horaini_h.setCellValueFactory(
-				data -> new SimpleObjectProperty<>(data.getValue().getHorarioReserva().getHoraInicio()));
-		col_horafin_h.setCellValueFactory(data -> {
-			TiempoReserva tiempoReserva = data.getValue().getHorarioReserva();
-			return new SimpleObjectProperty<>(tiempoReserva.calcularHoraFin(tiempoReserva.getHoraInicio()));
-		});
-		col_estado_h.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEstado()));
+        tabla_obj.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reserva>() {
+            @Override
+            public void changed(ObservableValue<? extends Reserva> observable, Reserva elementoAnterior, Reserva busSeleccionado) {
+                if (busSeleccionado != null) {
+                    txf_idreserva.setText(String.valueOf(busSeleccionado.getId()));
+                    btn_nueva_reserva.setDisable(true);
+                    btn_cambiar_reserva.setDisable(false);
+                    btn_eliminar_reserva.setDisable(false);
+                }
+            }
+        });
 
-		reservasList = FXCollections.observableArrayList();
-		tabla_obj.setItems(reservasList);
+        // Combobox laboratorio y hora
+        ObservableList<String> labs = FXCollections.observableArrayList();
+        labs.add("C202");
+        labs.add("J103");
+        labs.add("C101");
+        labs.add("F102");
+        labs.add("L201");
+        cmb_laboratorio.setItems(labs);
 
-		btn_nueva_reserva.setDisable(false);
-		btn_cambiar_reserva.setDisable(true);
-		btn_eliminar_reserva.setDisable(true);
+        deserializarReservas("./", "reservas.txt");
+    }
 
-		tabla_obj.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Reserva>() {
-			@Override
-			public void changed(ObservableValue<? extends Reserva> observable, Reserva elementoAnterior,
-					Reserva busSeleccionado) {
-				if (busSeleccionado != null) {
-					txf_idreserva.setText(String.valueOf(busSeleccionado.getId()));
+    /**
+     * Serializa las reservas en un archivo.
+     * 
+     * @param path     la ruta del archivo.
+     * @param fileName el nombre del archivo.
+     */
+    private void serializarReservas(String path, String fileName) {
+        Reserva[] reservasArray = reservasList.toArray(new Reserva[reservasList.size()]);
+        operacionArchivo.serealizar(reservasArray, path, fileName);
+    }
 
-					btn_nueva_reserva.setDisable(true);
-					btn_cambiar_reserva.setDisable(false);
-					btn_eliminar_reserva.setDisable(false);
-				}
-			}
-		});
+    /**
+     * Deserializa las reservas desde un archivo.
+     * 
+     * @param path     la ruta del archivo.
+     * @param fileName el nombre del archivo.
+     */
+    private void deserializarReservas(String path, String fileName) {
+        Reserva[] reservasArray = operacionArchivo.deserealizar(path, fileName);
+        if (reservasArray != null) {
+            reservasList.setAll(reservasArray);
+        } else {
+            reservasList.clear();
+        }
+    }
 
+    /**
+     * Maneja el evento de crear una nueva reserva.
+     * 
+     * @param event el evento de acción.
+     */
+    @FXML
+    public void btn_nueva_reserva_a(ActionEvent event) {
+        validarReservas();
+        if (errores.size() > 0) {
+            String cadenaErrores = "";
+            for (int i = 0; i < errores.size(); i++) {
+                cadenaErrores += errores.get(i) + "\n";
+            }
+            Alert mensaje = new Alert(AlertType.ERROR);
+            mensaje.setTitle("Error");
+            mensaje.setHeaderText("Se encontraron los siguientes errores:");
+            mensaje.setContentText(cadenaErrores);
+            mensaje.show();
+            return;
+        }
+        reservasList.add(new Reserva(Integer.parseInt(txf_idreserva.getText()),
+                new Laboratorio(cmb_laboratorio.getSelectionModel().getSelectedItem(), 10, 20),
+                new Usuario("admin", 12345, "admin@universidad.edu"),
+                new TiempoReserva(dtp_fecha.getValue().toString(), LocalTime.of(Integer.parseInt(txf_hora.getText()), Integer.parseInt(txf_minuto.getText()))),
+                "ACTIVO"));
+        serializarReservas("./", "reservas.txt");
 
-		// Combobox laboratorio y hora
-		ObservableList<String> labs = FXCollections.observableArrayList();
-		labs.add("C202");
-		labs.add("J103");
-		labs.add("C101");
-		labs.add("F102");
-		labs.add("L201");
-		cmb_laboratorio.setItems(labs);
+        btn_limpiar_a();
+        Alert info = new Alert(AlertType.INFORMATION);
+        info.setContentText("Reserva creada exitosamente");
+        info.show();
+    }
 
-		deserializarReservas("./", "reservas.txt");
-	}
+    /**
+     * Maneja el evento de limpiar los campos del formulario.
+     */
+    @FXML
+    public void btn_limpiar_a() {
+        txf_idreserva.setText(null);
+        dtp_fecha.setValue(null);
+        cmb_laboratorio.getSelectionModel().select(null);
+        txf_hora.setText(null);
+        txf_minuto.setText(null);
 
-	private void serializarReservas(String path, String fileName) {
-		Reserva[] reservasArray = reservasList.toArray(new Reserva[reservasList.size()]);
-		operacionArchivo.serealizar(reservasArray, path, fileName);
-	}
+        btn_nueva_reserva.setDisable(false);
+        btn_cambiar_reserva.setDisable(true);
+        btn_eliminar_reserva.setDisable(true);
 
-	private void deserializarReservas(String path, String fileName) {
-		Reserva[] reservasArray = operacionArchivo.deserealizar(path, fileName);
-		if (reservasArray != null) {
-			reservasList.setAll(reservasArray);
-		} else {
-			reservasList.clear();
-		}
-	}
+        tabla_obj.getSelectionModel().clearSelection();
+    }
 
-	// Event Listener on Button[#btn_nueva_reserva].onAction
-	@FXML
-	public void btn_nueva_reserva_a(ActionEvent event) {
+    /**
+     * Maneja el evento de eliminar una reserva.
+     * 
+     * @param event el evento de acción.
+     */
+    @FXML
+    public void btn_eliminar_reserva_a(ActionEvent event) {
+        Alert mensaje = new Alert(AlertType.CONFIRMATION);
+        mensaje.setTitle("Eliminar");
+        mensaje.setHeaderText("Se eliminará una reserva");
+        mensaje.setContentText("¿Desea eliminar la reserva");
 
-		reservasList.add(new Reserva(Integer.parseInt(txf_idreserva.getText()),
-				new Laboratorio(cmb_laboratorio.getSelectionModel().getSelectedItem(), 10, 20),
-				new Usuario("admin", 12345, "admin@universidad.edu"),
-				new TiempoReserva(dtp_fecha.getValue().toString(),
-						LocalTime.of(Integer.parseInt(txf_hora.getText()), Integer.parseInt(txf_minuto.getText()))),
-				"ACTIVO"));
-		serializarReservas("./", "reservas.txt");
+        Reserva selectedReserva = tabla_obj.getSelectionModel().getSelectedItem();
+        Optional<ButtonType> resultado = mensaje.showAndWait();
+        if (resultado.get() == ButtonType.OK) {
+            btn_limpiar_a();
+            Alert info = new Alert(AlertType.INFORMATION);
+            info.setContentText("Reserva eliminada exitosamente");
+            info.show();
+            if (selectedReserva != null) {
+                // Cambiar el estado a "INACTIVO"
+                selectedReserva.setEstado("INACTIVO");
 
-		btn_limpiar_a();
-		Alert info = new Alert(AlertType.INFORMATION);
-		info.setContentText("Reserva creada exitosamente");
-		info.show();
+                // Actualizar la tabla para reflejar el cambio
+                tabla_obj.refresh();
 
-	}
+                // Serializar las reservas para guardar los cambios
+                serializarReservas("./", "reservas.txt");
+            }
+        }
+    }
 
-	// Event Listener on Button[#btn_limpiar].onAction
-	@FXML
-	public void btn_limpiar_a() {
-		txf_idreserva.setText(null);
-		dtp_fecha.setValue(null);
-		cmb_laboratorio.getSelectionModel().select(null);
-		txf_hora.setText(null);
-		txf_minuto.setText(null);
+    /**
+     * Maneja el evento de cambiar una reserva existente.
+     * 
+     * @param event el evento de acción.
+     */
+    @FXML
+    public void btn_cambiar_reserva_a(ActionEvent event) {
+        validarReservas();
+        if (errores.size() > 0) {
+            String cadenaErrores = "";
+            for (int i = 0; i < errores.size(); i++) {
+                cadenaErrores += errores.get(i) + "\n";
+            }
+            Alert mensaje = new Alert(AlertType.ERROR);
+            mensaje.setTitle("Error");
+            mensaje.setHeaderText("Se encontraron los siguientes errores:");
+            mensaje.setContentText(cadenaErrores);
+            mensaje.show();
+            return;
+        }
+        reservasList.set(tabla_obj.getSelectionModel().getSelectedIndex(),
+                new Reserva(Integer.parseInt(txf_idreserva.getText()),
+                        new Laboratorio(cmb_laboratorio.getSelectionModel().getSelectedItem(), 10, 20),
+                        new Usuario("admin", 12345, "admin@universidad.edu"),
+                        new TiempoReserva(dtp_fecha.getValue().toString(), LocalTime.of(Integer.parseInt(txf_hora.getText()), Integer.parseInt(txf_minuto.getText()))),
+                        "ACTIVO"));
+        serializarReservas("./", "reservas.txt");
 
-		btn_nueva_reserva.setDisable(false);
-		btn_cambiar_reserva.setDisable(true);
-		btn_eliminar_reserva.setDisable(true);
+        btn_limpiar_a();
+        Alert info = new Alert(AlertType.INFORMATION);
+        info.setContentText("Reserva cambiada exitosamente");
+        info.show();
+    }
 
-		tabla_obj.getSelectionModel().clearSelection();
-	}
+    /**
+     * Maneja el evento de salir de la aplicación.
+     * 
+     * @param event el evento de acción.
+     */
+    @FXML
+    public void btn_salir_a(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/edu/poli/proyecto/vista/InicioSesion.fxml"));
+            Parent root = loader.load();
 
-	// Event Listener on Button[#btn_eliminar_reserva].onAction
-	@FXML
-	public void btn_eliminar_reserva_a(ActionEvent event) {
-		Alert mensaje = new Alert(AlertType.CONFIRMATION);
-		mensaje.setTitle("Eliminar");
-		mensaje.setHeaderText("Se eliminará una reserva");
-		mensaje.setContentText("¿Desea eliminar la reserva");
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+            stage.initStyle(StageStyle.UNDECORATED);
 
-		Reserva selectedReserva = tabla_obj.getSelectionModel().getSelectedItem();
-		Optional<ButtonType> resultado = mensaje.showAndWait();
-		if (resultado.get() == ButtonType.OK) {
-			btn_limpiar_a();
-			Alert info = new Alert(AlertType.INFORMATION);
-			info.setContentText("Reserva eliminada exitosamente");
-			info.show();
-			if (selectedReserva != null) {
-				// Cambiar el estado a "INACTIVO"
-				selectedReserva.setEstado("INACTIVO");
+            root.setOnMousePressed(eventPressed -> {
+                xOffset = eventPressed.getSceneX();
+                yOffset = eventPressed.getSceneY();
+            });
 
-				// Actualizar la tabla para reflejar el cambio
-				tabla_obj.refresh();
+            root.setOnMouseDragged(eventDragged -> {
+                stage.setX(eventDragged.getScreenX() - xOffset);
+                stage.setY(eventDragged.getScreenY() - yOffset);
+            });
+            stage.setScene(scene);
+            stage.show();
 
-				// Serializar las reservas para guardar los cambios
-				serializarReservas("./", "reservas.txt");
-			}
-		}
-	}
+            ((Node) (event.getSource())).getScene().getWindow().hide();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	// Event Listener on Button[#btn_cambiar_reserva].onAction
-	@FXML
-	public void btn_cambiar_reserva_a(ActionEvent event) {
+    /**
+     * Deserializa las reservas disponibles desde un archivo.
+     * 
+     * @param filePath la ruta del archivo.
+     */
+    public void deserializarReservasDisponibles(String filePath) {
+        reservasDisList.clear(); // Clear the existing list before adding new data
 
-		validarReservas();
-		if (errores.size() > 0) {
-			String cadenaErrores = "";
-			for (int i = 0; i < errores.size(); i++) {
-				cadenaErrores += errores.get(i) + "\n";
-			}
-			Alert mensaje = new Alert(AlertType.ERROR);
-			mensaje.setTitle("Error");
-			mensaje.setHeaderText("Se encontraron los siguientes errores:");
-			mensaje.setContentText(cadenaErrores);
-			mensaje.show();
-			return;
-		}
-		reservasList.set(tabla_obj.getSelectionModel().getSelectedIndex(),
-				new Reserva(Integer.parseInt(txf_idreserva.getText()),
-						new Laboratorio(cmb_laboratorio.getSelectionModel().getSelectedItem(), 10, 20),
-						new Usuario("admin", 12345, "admin@universidad.edu"),
-						new TiempoReserva(dtp_fecha.getValue().toString(), LocalTime
-								.of(Integer.parseInt(txf_hora.getText()), Integer.parseInt(txf_minuto.getText()))),
-						"ACTIVO"));
-		serializarReservas("./", "reservas.txt");
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(","); // Assuming the file is comma-separated
 
-		btn_limpiar_a();
-		Alert info = new Alert(AlertType.INFORMATION);
-		info.setContentText("Reserva creada exitosamente");
-		info.show();
+                if (parts.length == 6) { // Adjust the number according to your file format
+                    int id = Integer.parseInt(parts[0]);
+                    Laboratorio laboratorio = new Laboratorio(parts[1], 10, 20); // Assuming fixed capacity values
+                    Usuario usuario = new Usuario("admin", 12345, "admin@universidad.edu");
+                    String fecha = parts[2];
+                    LocalTime horaInicio = LocalTime.parse(parts[3]); // Assuming the time is in HH:mm format
+                    TiempoReserva tiempoReserva = new TiempoReserva(fecha, horaInicio);
+                    String estado = parts[4];
 
-	}
+                    if ("ACTIVO".equalsIgnoreCase(estado)) { // Only add if the state is "ACTIVO"
+                        Reserva reserva = new Reserva(id, laboratorio, usuario, tiempoReserva, estado);
+                        reservasDisList.add(reserva);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert errorAlert = new Alert(AlertType.ERROR);
+            errorAlert.setTitle("Error");
+            errorAlert.setHeaderText("Error al leer el archivo");
+            errorAlert.setContentText("No se pudo leer el archivo de reservas disponibles.");
+            errorAlert.show();
+        }
+    }
 
-	// Event Listener on Button[#btn_salir].onAction
-	@FXML
-	public void btn_salir_a(ActionEvent event) {
-		try {
+    /**
+     * Valida los campos del formulario de reserva.
+     * Agrega errores a la lista de errores si hay campos inválidos.
+     */
+    public void validarReservas() {
+        errores.clear();
 
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("/co/edu/poli/proyecto/vista/InicioSesion.fxml"));
-			Parent root = loader.load();
+        // Validar id reserva
+        try {
+            String idReserva = txf_idreserva.getText();
+            if (idReserva == null || idReserva.isEmpty()) {
+                throw new NullPointerException("El campo id reserva es obligatorio");
+            }
+            Integer.parseInt(idReserva);
+        } catch (NumberFormatException e) {
+            errores.add("El campo id reserva debe ser numérico");
+        } catch (NullPointerException e) {
+            errores.add(e.getMessage());
+        }
 
-			Stage stage = new Stage();
-			Scene scene = new Scene(root);
-			stage.initStyle(StageStyle.UNDECORATED);
+        // Validar laboratorio
+        if (cmb_laboratorio.getSelectionModel().getSelectedItem() == null) {
+            errores.add("Debe seleccionar un laboratorio");
+        }
 
-			root.setOnMousePressed(eventPressed -> {
-				xOffset = eventPressed.getSceneX();
-				yOffset = eventPressed.getSceneY();
-			});
+        // Validar fecha
+        try {
+            LocalDate fechaSeleccionada = dtp_fecha.getValue();
+            if (fechaSeleccionada == null) {
+                throw new NullPointerException("El campo fecha de funcionamiento es obligatorio");
+            }
+        } catch (NullPointerException e) {
+            errores.add(e.getMessage());
+        } catch (Exception e) {
+            errores.add("Error al ingresar la fecha");
+        }
 
-			root.setOnMouseDragged(eventDragged -> {
-				stage.setX(eventDragged.getScreenX() - xOffset);
-				stage.setY(eventDragged.getScreenY() - yOffset);
-			});
-			stage.setScene(scene);
-			stage.show();
+        // Validar hora
+        try {
+            String horaText = txf_hora.getText();
+            if (horaText == null || horaText.isEmpty()) {
+                throw new NullPointerException("El campo hora es obligatorio");
+            }
 
-			((Node) (event.getSource())).getScene().getWindow().hide();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	public void deserializarReservasDisponibles(String filePath) {
-	    reservasDisList.clear(); // Clear the existing list before adding new data
+            int hora = Integer.parseInt(horaText);
+            if (hora < 0 || hora > 23) {
+                throw new IllegalArgumentException("El campo hora debe estar entre 0 y 23");
+            }
+        } catch (NumberFormatException e) {
+            errores.add("El campo hora debe ser numérico");
+        } catch (NullPointerException e) {
+            errores.add(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            errores.add(e.getMessage());
+        }
 
-	    try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-	        String line;
-	        while ((line = br.readLine()) != null) {
-	            String[] parts = line.split(","); // Assuming the file is comma-separated
+        // Validar minuto
+        try {
+            String minuto = txf_minuto.getText();
+            if (minuto == null || minuto.isEmpty()) {
+                throw new NullPointerException("El campo minuto es obligatorio");
+            }
 
-	            if (parts.length == 6) { // Adjust the number according to your file format
-	                int id = Integer.parseInt(parts[0]);
-	                Laboratorio laboratorio = new Laboratorio(parts[1], 10, 20); // Assuming fixed capacity values
-	                Usuario usuario = new Usuario("admin", 12345, "admin@universidad.edu");
-	                String fecha = parts[2];
-	                LocalTime horaInicio = LocalTime.parse(parts[3]); // Assuming the time is in HH:mm format
-	                TiempoReserva tiempoReserva = new TiempoReserva(fecha, horaInicio);
-	                String estado = parts[4];
-
-	                if ("ACTIVO".equalsIgnoreCase(estado)) { // Only add if the state is "ACTIVO"
-	                    Reserva reserva = new Reserva(id, laboratorio, usuario, tiempoReserva, estado);
-	                    reservasDisList.add(reserva);
-	                }
-	            }
-	        }
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	        Alert errorAlert = new Alert(AlertType.ERROR);
-	        errorAlert.setTitle("Error");
-	        errorAlert.setHeaderText("Error al leer el archivo");
-	        errorAlert.setContentText("No se pudo leer el archivo de reservas disponibles.");
-	        errorAlert.show();
-	    }
-	}
-
-	public void validarReservas() {
-		errores.clear();
-
-		/*
-		 * String patronHora = "[0-23]"; String patronMinuto = "[0-59]";
-		 */
-
-		// id reserva
-		try {
-			String idReserva = txf_idreserva.getText();
-			if (idReserva == null || idReserva.isEmpty()) {
-				throw new NullPointerException("El campo id reserva es obligatorio");
-			}
-			Integer.parseInt(idReserva);
-		} catch (NumberFormatException e) {
-			errores.add("El campo id reserva debe ser numérico");
-		} catch (NullPointerException e) {
-			errores.add(e.getMessage());
-		}
-
-		// laboratorio
-		if (cmb_laboratorio.getSelectionModel().getSelectedItem() == null) {
-			errores.add("Debe seleccionar un laborartorio");
-		}
-		// fecha
-		try {
-			LocalDate fechaSeleccionada = dtp_fecha.getValue();
-			if (fechaSeleccionada == null) {
-				throw new NullPointerException("El campo fecha de funcionamiento es obligatorio");
-			}
-		} catch (NullPointerException e) {
-			errores.add(e.getMessage());
-		} catch (Exception e) {
-			errores.add("Error al ingresar la fecha");
-		}
-		// hora
-		try {
-			String horaText = txf_hora.getText();
-
-			if (horaText == null || horaText.isEmpty()) {
-				throw new NullPointerException("El campo hora es obligatorio");
-			}
-
-			int hora = Integer.parseInt(horaText); // This will throw NumberFormatException if not a number
-
-			// Check if hora is within the range 0 to 23
-			if (hora < 0 || hora > 23) {
-				throw new IllegalArgumentException("El campo hora debe estar entre 0 y 23");
-			}
-		} catch (NumberFormatException e) {
-			errores.add("El campo hora debe ser numérico");
-		} catch (NullPointerException e) {
-			errores.add(e.getMessage());
-		} catch (IllegalArgumentException e) {
-			errores.add(e.getMessage());
-		}
-		// minuto
-		try {
-			String minuto = txf_minuto.getText();
-
-			if (minuto == null || minuto.isEmpty()) {
-				throw new NullPointerException("El campo minuto es obligatorio");
-			}
-
-			int minutoInt = Integer.parseInt(minuto);
-
-			if (minutoInt < 0 || minutoInt > 59) {
-				throw new IllegalArgumentException("El campo minuto debe estar entre 0 y 59");
-			}
-		} catch (NumberFormatException e) {
-			errores.add("El campo hora debe ser numérico");
-		} catch (NullPointerException e) {
-			errores.add(e.getMessage());
-		} catch (IllegalArgumentException e) {
-			errores.add(e.getMessage());
-		}
-	}
-
+            int minutoInt = Integer.parseInt(minuto);
+            if (minutoInt < 0 || minutoInt > 59) {
+                throw new IllegalArgumentException("El campo minuto debe estar entre 0 y 59");
+            }
+        } catch (NumberFormatException e) {
+            errores.add("El campo minuto debe ser numérico");
+        } catch (NullPointerException e) {
+            errores.add(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            errores.add(e.getMessage());
+        }
+    }
 }
